@@ -1,6 +1,12 @@
-# 🛒 Playmobil Warenkorb-Helfer - Chrome Extension
+# 🛒 Warenkorb-Helfer für Playmobil Ersatzteile - Chrome Extension
 
-Eine Chrome-Extension zum automatischen Befüllen und Exportieren des Playmobil-Warenkorbs.
+Eine Chrome-Extension zum automatisierten Befüllen, Exportieren und Leeren des Playmobil-Warenkorbs.
+
+---
+
+## Lizenz
+
+Diese Extension steht unter der MIT-Lizenz. Siehe die [LICENSE](LICENSE)-Datei für weitere Informationen.
 
 ## Installation
 
