@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Playmobil Warenkorb-Helfer",
-  "description": "Automatisches Befüllen und Exportieren des Playmobil-Warenkorbs",
+  "name": "Warenkorb-Helfer für PLAYMOBIL® Ersatzteile",
+  "description": "Automatisiertes Befüllen, Exportieren und Leeren des Warenkorbs auf playmobil.com",
   "version": "1.2.0",
   "permissions": [
     "activeTab",
