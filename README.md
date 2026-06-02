@@ -25,7 +25,7 @@ Diese Extension steht unter der MIT-Lizenz. Siehe die [LICENSE](LICENSE)-Datei f
 ### Schritt 3: Extension anpinnen (empfohlen)
 
 1. Klicke auf das Puzzle-Symbol (🧩) rechts neben der Adressleiste
-2. Finde "Playmobil Warenkorb-Helfer" in der Liste
+2. Finde "Warenkorb-Helfer für playmobil.com" in der Liste
 3. Klicke auf das Pin-Symbol (📌), um die Extension anzupinnen
 
 So ist das Icon immer sichtbar und schnell erreichbar.
