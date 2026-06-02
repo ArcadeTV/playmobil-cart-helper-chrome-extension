@@ -64,30 +64,118 @@ document.getElementById('btnImport').addEventListener('click', async () => {
         return;
     }
     
-    showStatus('importStatus', `🔄 Starte Import von ${articles.length} Artikeln...`, 'info');
     document.getElementById('btnImport').disabled = true;
+    const statusEl = document.getElementById('importStatus');
     
-    try {
-        const result = await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: importArticles,
-            args: [articles, delay]
-        });
+    const successItems = [];
+    const unavailableItems = [];
+    let addedCount = 0;
+    let errorCount = 0;
+    
+    // Phase 1: Check availability
+    statusEl.innerHTML = `<span style="color: #60a5fa;">🔍 Prüfe Verfügbarkeit: 0/${articles.length}...</span>`;
+    statusEl.style.display = 'block';
+    
+    const availableArticles = [];
+    
+    for (let i = 0; i < articles.length; i++) {
+        const article = articles[i];
+        statusEl.innerHTML = `<span style="color: #60a5fa;">🔍 Prüfe: ${article.pid} (${i + 1}/${articles.length})</span>`;
         
-        const { success, errors, available, unavailable, successItems, unavailableItems } = result[0].result;
+        try {
+            const result = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: async (pid) => {
+                    const response = await fetch('/on/demandware.store/Sites-DE-Site/de_DE/SpareParts-Search?q=' + pid);
+                    const html = await response.text();
+                    
+                    if (html.includes('spareParts__searchResults') && !html.includes('spareParts__noSearchResults')) {
+                        let name = pid;
+                        const nameMatch = html.match(/&quot;item_name&quot;\s*:\s*&quot;(.+?)&quot;/);
+                        if (nameMatch) {
+                            name = nameMatch[1]
+                                .replace(/&ouml;/g, 'ö').replace(/&auml;/g, 'ä').replace(/&uuml;/g, 'ü')
+                                .replace(/&Ouml;/g, 'Ö').replace(/&Auml;/g, 'Ä').replace(/&Uuml;/g, 'Ü')
+                                .replace(/&szlig;/g, 'ß').replace(/&amp;/g, '&');
+                        }
+                        return { available: true, name };
+                    }
+                    return { available: false };
+                },
+                args: [article.pid]
+            });
+            
+            const { available, name } = result[0].result;
+            if (available) {
+                availableArticles.push({ ...article, name });
+            } else {
+                unavailableItems.push(article.pid);
+            }
+        } catch (err) {
+            unavailableItems.push(article.pid);
+        }
         
-        let message = `✅ ${success} Artikel hinzugefügt`;
-        if (unavailable > 0) message += ` | ❌ ${unavailable} nicht verfügbar`;
-        if (errors > 0) message += ` | ⚠️ ${errors} Fehler`;
-        
-        showStatus('importStatus', message, errors > 0 ? 'error' : 'success');
-        
-        // Show detailed results
-        showImportResults(successItems || [], unavailableItems || []);
-    } catch (err) {
-        showStatus('importStatus', '❌ Fehler: ' + err.message, 'error');
+        await new Promise(r => setTimeout(r, 200));
     }
     
+    if (availableArticles.length === 0) {
+        statusEl.innerHTML = `<span style="color: #fbbf24;">⚠️ Keine verfügbaren Artikel gefunden</span>`;
+        showImportResults([], unavailableItems);
+        document.getElementById('btnImport').disabled = false;
+        return;
+    }
+    
+    // Phase 2: Add to cart
+    statusEl.innerHTML = `<span style="color: #60a5fa;">🛒 Füge hinzu: 0/${availableArticles.length}...</span>`;
+    
+    for (let i = 0; i < availableArticles.length; i++) {
+        const article = availableArticles[i];
+        statusEl.innerHTML = `<span style="color: #60a5fa;">🛒 ${article.name} (${i + 1}/${availableArticles.length})</span>`;
+        
+        try {
+            const result = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: async (pid, qty) => {
+                    const formData = new FormData();
+                    formData.append('pid', pid);
+                    formData.append('quantity', qty);
+                    
+                    const response = await fetch('/on/demandware.store/Sites-DE-Site/de_DE/Cart-AddProduct', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    
+                    const data = await response.json();
+                    return !data.error && data.success !== false;
+                },
+                args: [article.pid, article.qty]
+            });
+            
+            if (result[0].result) {
+                addedCount++;
+                successItems.push({ pid: article.pid, name: article.name, qty: article.qty });
+            } else {
+                errorCount++;
+            }
+        } catch (err) {
+            errorCount++;
+        }
+        
+        if (i < availableArticles.length - 1) {
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+    
+    // Final status
+    let message = `✅ ${addedCount} Artikel hinzugefügt`;
+    if (unavailableItems.length > 0) message += ` | ❌ ${unavailableItems.length} nicht verfügbar`;
+    if (errorCount > 0) message += ` | ⚠️ ${errorCount} Fehler`;
+    
+    statusEl.innerHTML = `<span style="color: ${errorCount > 0 ? '#fbbf24' : '#22c55e'};">${message}</span>`;
+    
+    showImportResults(successItems, unavailableItems);
     document.getElementById('btnImport').disabled = false;
 });
 
@@ -125,13 +213,34 @@ function showImportResults(successItems, unavailableItems) {
         
         unavailableItems.forEach(pid => {
             const li = document.createElement('li');
-            const link = document.createElement('a');
-            link.href = `https://playmodb.org/cgi-bin/showpart.pl?partnum=${pid}`;
-            link.target = '_blank';
-            link.textContent = pid;
-            link.title = 'In playmodb.org öffnen';
-            li.appendChild(link);
-            li.appendChild(document.createTextNode(' – nicht verfügbar'));
+            
+            // Produktnummer als Text
+            const pidSpan = document.createElement('span');
+            pidSpan.textContent = pid;
+            li.appendChild(pidSpan);
+            
+            // Separator
+            li.appendChild(document.createTextNode(' – '));
+            
+            // Link zu playmodb
+            const playmodbLink = document.createElement('a');
+            playmodbLink.href = `https://playmodb.org/cgi-bin/showpart.pl?partnum=${pid}`;
+            playmodbLink.target = '_blank';
+            playmodbLink.textContent = 'playmodb';
+            playmodbLink.title = 'In playmodb.org öffnen';
+            li.appendChild(playmodbLink);
+            
+            // Separator
+            li.appendChild(document.createTextNode(' | '));
+            
+            // Link zu pm.com
+            const pmLink = document.createElement('a');
+            pmLink.href = `https://www.playmobil.com/de-de/beschreibung/${pid}.html`;
+            pmLink.target = '_blank';
+            pmLink.textContent = 'pm.com';
+            pmLink.title = 'Auf playmobil.com öffnen';
+            li.appendChild(pmLink);
+            
             errorItemsUl.appendChild(li);
         });
     } else {
@@ -153,6 +262,16 @@ document.getElementById('btnOpenAllUnavailable').addEventListener('click', () =>
     });
 });
 
+// Open all unavailable items on playmobil.com
+document.getElementById('btnOpenAllPmCom').addEventListener('click', () => {
+    currentUnavailableItems.forEach(pid => {
+        chrome.tabs.create({ 
+            url: `https://www.playmobil.com/de-de/beschreibung/${pid}.html`,
+            active: false 
+        });
+    });
+});
+
 // Download unavailable items as text file
 document.getElementById('btnDownloadUnavailable').addEventListener('click', () => {
     const content = currentUnavailableItems.join('\n');
@@ -167,120 +286,6 @@ document.getElementById('btnDownloadUnavailable').addEventListener('click', () =
     URL.revokeObjectURL(url);
 });
 
-// Import function that runs in the page context
-async function importArticles(articles, delay) {
-    console.log('%c🛒 Playmobil Warenkorb-Helfer (Extension)', 'font-size: 16px; font-weight: bold; color: #667eea;');
-    console.log('Artikel zu verarbeiten:', articles.length);
-    
-    // Phase 1: Check availability
-    console.log('\n%c🔍 Phase 1: Prüfe Verfügbarkeit...', 'font-size: 14px; font-weight: bold; color: #667eea;');
-    
-    const availableArticles = [];
-    const unavailableArticles = [];
-    
-    for (let i = 0; i < articles.length; i++) {
-        const article = articles[i];
-        console.log(`[${i + 1}/${articles.length}] Prüfe: ${article.pid}`);
-        
-        try {
-            const response = await fetch('/on/demandware.store/Sites-DE-Site/de_DE/SpareParts-Search?q=' + article.pid);
-            const html = await response.text();
-            
-            if (html.includes('spareParts__searchResults') && !html.includes('spareParts__noSearchResults')) {
-                let name = article.pid;
-                const nameMatch = html.match(/&quot;item_name&quot;\s*:\s*&quot;(.+?)&quot;/);
-                if (nameMatch) {
-                    name = nameMatch[1]
-                        .replace(/&ouml;/g, 'ö').replace(/&auml;/g, 'ä').replace(/&uuml;/g, 'ü')
-                        .replace(/&Ouml;/g, 'Ö').replace(/&Auml;/g, 'Ä').replace(/&Uuml;/g, 'Ü')
-                        .replace(/&szlig;/g, 'ß').replace(/&amp;/g, '&');
-                }
-                console.log('%c  ✅ ' + name, 'color: #22c55e;');
-                availableArticles.push({ ...article, name });
-            } else {
-                console.log('%c  ❌ Nicht verfügbar', 'color: #ef4444;');
-                unavailableArticles.push(article.pid);
-            }
-        } catch (err) {
-            console.log('%c  ⚠️ Fehler: ' + err.message, 'color: #fbbf24;');
-            unavailableArticles.push(article.pid);
-        }
-        
-        await new Promise(r => setTimeout(r, 200));
-    }
-    
-    if (availableArticles.length === 0) {
-        console.log('%c\n⚠️ Keine verfügbaren Artikel!', 'color: #fbbf24;');
-        return { 
-            success: 0, 
-            errors: 0, 
-            available: 0, 
-            unavailable: unavailableArticles.length,
-            successItems: [],
-            unavailableItems: unavailableArticles
-        };
-    }
-    
-    // Phase 2: Add to cart
-    console.log('\n%c🛒 Phase 2: Füge zum Warenkorb hinzu...', 'font-size: 14px; font-weight: bold; color: #667eea;');
-    
-    let success = 0;
-    let errors = 0;
-    const successfulArticles = [];
-    
-    for (let i = 0; i < availableArticles.length; i++) {
-        const article = availableArticles[i];
-        console.log(`[${i + 1}/${availableArticles.length}] ${article.name} (x${article.qty})`);
-        
-        try {
-            const formData = new FormData();
-            formData.append('pid', article.pid);
-            formData.append('quantity', article.qty);
-            
-            const response = await fetch('/on/demandware.store/Sites-DE-Site/de_DE/Cart-AddProduct', {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            
-            const data = await response.json();
-            
-            if (data.error || data.success === false) {
-                console.log('%c  ✗ Fehler', 'color: #ef4444;');
-                errors++;
-            } else {
-                console.log('%c  ✓ Hinzugefügt', 'color: #22c55e;');
-                success++;
-                successfulArticles.push({ pid: article.pid, name: article.name, qty: article.qty });
-            }
-        } catch (err) {
-            console.log('%c  ✗ ' + err.message, 'color: #ef4444;');
-            errors++;
-        }
-        
-        if (i < availableArticles.length - 1) {
-            await new Promise(r => setTimeout(r, delay));
-        }
-    }
-    
-    console.log('\n%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #667eea;');
-    console.log(`✅ Hinzugefügt: ${success} | ❌ Nicht verfügbar: ${unavailableArticles.length} | ⚠️ Fehler: ${errors}`);
-    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #667eea;');
-    
-    if (success > 0) {
-        console.log('%c\n💡 Seite aktualisieren um Warenkorb zu sehen!', 'color: #fbbf24;');
-    }
-    
-    return { 
-        success, 
-        errors, 
-        available: availableArticles.length, 
-        unavailable: unavailableArticles.length,
-        successItems: successfulArticles,
-        unavailableItems: unavailableArticles
-    };
-}
 
 // Export button click
 document.getElementById('btnExport').addEventListener('click', async () => {
@@ -348,6 +353,95 @@ document.getElementById('btnCopyExport').addEventListener('click', async () => {
     setTimeout(() => {
         document.getElementById('btnCopyExport').textContent = '📋 Kopieren';
     }, 2000);
+});
+
+// Clear cart button click
+document.getElementById('btnClearCart').addEventListener('click', async () => {
+    const { isPlaymobil, tab } = await checkPlaymobilTab();
+    if (!isPlaymobil) return;
+    
+    // Check if on cart page
+    if (!tab.url.includes('/warenkorb')) {
+        document.getElementById('clearStatus').innerHTML = '<span style="color: #fbbf24;">⚠️ Bitte zuerst zur <a href="https://www.playmobil.com/de-de/warenkorb/" target="_blank" style="color: #60a5fa; text-decoration: underline;">Warenkorb-Seite</a> wechseln</span>';
+        document.getElementById('clearStatus').style.display = 'block';
+        return;
+    }
+    
+    document.getElementById('btnClearCart').disabled = true;
+    const statusEl = document.getElementById('clearStatus');
+    
+    try {
+        // First get the count of items
+        const countResult = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: () => document.querySelectorAll('.js-removeProductLineItem').length
+        });
+        
+        const total = countResult[0].result;
+        
+        if (total === 0) {
+            showStatus('clearStatus', '⚠️ Warenkorb ist bereits leer', 'info');
+            document.getElementById('btnClearCart').disabled = false;
+            return;
+        }
+        
+        // Show initial progress
+        statusEl.innerHTML = `<span style="color: #60a5fa;">🔄 0/${total} Artikel entfernt...</span>`;
+        statusEl.style.display = 'block';
+        
+        // Delete items one by one with progress updates
+        let removed = 0;
+        let retries = 0;
+        
+        for (let i = 0; i < total; i++) {
+            const deleteResult = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => {
+                    const btn = document.querySelector('.js-removeProductLineItem');
+                    if (!btn) return { found: false };
+                    const pid = btn.closest('.js-cartProduct')?.dataset.pid || '?';
+                    const countBefore = document.querySelectorAll('.js-removeProductLineItem').length;
+                    btn.click();
+                    return { found: true, pid, countBefore };
+                }
+            });
+            
+            const { found, pid, countBefore } = deleteResult[0].result;
+            if (!found) break;
+            
+            // Wait for deletion
+            await new Promise(r => setTimeout(r, 1500));
+            
+            // Check if successful
+            const checkResult = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => document.querySelectorAll('.js-removeProductLineItem').length
+            });
+            
+            const countAfter = checkResult[0].result;
+            
+            if (countAfter < countBefore) {
+                removed++;
+                statusEl.innerHTML = `<span style="color: #60a5fa;">🔄 ${removed}/${total} Artikel entfernt... (${pid})</span>`;
+            } else {
+                // Rate limit - wait and retry
+                retries++;
+                statusEl.innerHTML = `<span style="color: #fbbf24;">⏳ Rate Limit - warte... (${removed}/${total})</span>`;
+                await new Promise(r => setTimeout(r, 3000));
+                i--; // Retry
+            }
+        }
+        
+        if (removed > 0) {
+            statusEl.innerHTML = `<span style="color: #22c55e;">✅ ${removed} von ${total} Artikeln entfernt</span>`;
+        } else {
+            statusEl.innerHTML = `<span style="color: #ef4444;">❌ Keine Artikel entfernt</span>`;
+        }
+    } catch (err) {
+        showStatus('clearStatus', '❌ Fehler: ' + err.message, 'error');
+    }
+    
+    document.getElementById('btnClearCart').disabled = false;
 });
 
 // Save export to storage

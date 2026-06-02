@@ -345,6 +345,7 @@
         <div class="tab-container">
             <button class="tab active" data-tab="import">📥 Import</button>
             <button class="tab" data-tab="export">📤 Export</button>
+            <button class="tab" data-tab="clear">🗑️ Leeren</button>
         </div>
 
         <div id="tab-import" class="tab-content active">
@@ -377,8 +378,9 @@ Format: Artikelnummer;Menge"></textarea>
                 <ul id="errorItems"></ul>
                 <div class="result-actions">
                     <button class="btn btn-secondary" id="btnOpenAllUnavailable">🔗 Alle in playmodb öffnen</button>
-                    <button class="btn btn-secondary" id="btnDownloadUnavailable">💾 Liste speichern</button>
+                    <button class="btn btn-secondary" id="btnOpenAllPmCom">🔗 Alle auf pm.com öffnen</button>
                 </div>
+                <button class="btn btn-secondary" id="btnDownloadUnavailable" style="width: 100%; margin-top: 8px;">💾 Liste speichern</button>
             </div>
         </div>
 
@@ -403,6 +405,20 @@ Format: Artikelnummer;Menge"></textarea>
             <button class="btn btn-secondary" id="btnCopyExport">📋 Kopieren</button>
             <button class="btn btn-secondary" id="btnSaveExport">💾 Speichern</button>
         </div>
+    </div>
+
+    <div id="tab-clear" class="tab-content">
+        <div class="export-info">
+            <strong>🗑️ Warenkorb leeren</strong>
+            <p style="margin-top: 10px; line-height: 1.5;">
+                Entfernt alle Artikel aus dem Warenkorb.<br>
+                <strong style="color: #fbbf24;">⚠️ Funktioniert nur auf der Warenkorb-Seite!</strong>
+            </p>
+        </div>
+
+        <button class="btn btn-primary" id="btnClearCart" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fbbf24;">🗑️ Warenkorb leeren</button>
+        
+        <div id="clearStatus" class="status"></div>
     </div>
     </div>
 
