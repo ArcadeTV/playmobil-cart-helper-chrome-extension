@@ -74,18 +74,97 @@ document.getElementById('btnImport').addEventListener('click', async () => {
             args: [articles, delay]
         });
         
-        const { success, errors, available, unavailable } = result[0].result;
+        const { success, errors, available, unavailable, successItems, unavailableItems } = result[0].result;
         
         let message = `✅ ${success} Artikel hinzugefügt`;
         if (unavailable > 0) message += ` | ❌ ${unavailable} nicht verfügbar`;
         if (errors > 0) message += ` | ⚠️ ${errors} Fehler`;
         
         showStatus('importStatus', message, errors > 0 ? 'error' : 'success');
+        
+        // Show detailed results
+        showImportResults(successItems || [], unavailableItems || []);
     } catch (err) {
         showStatus('importStatus', '❌ Fehler: ' + err.message, 'error');
     }
     
     document.getElementById('btnImport').disabled = false;
+});
+
+// Store unavailable items for download/open actions
+let currentUnavailableItems = [];
+
+// Show import results in UI
+function showImportResults(successItems, unavailableItems) {
+    const resultsDiv = document.getElementById('importResults');
+    const successList = document.getElementById('successList');
+    const errorList = document.getElementById('errorList');
+    const successItemsUl = document.getElementById('successItems');
+    const errorItemsUl = document.getElementById('errorItems');
+    
+    // Clear previous results
+    successItemsUl.innerHTML = '';
+    errorItemsUl.innerHTML = '';
+    
+    // Show success items
+    if (successItems.length > 0) {
+        successList.style.display = 'block';
+        successItems.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = `${item.name} (x${item.qty})`;
+            successItemsUl.appendChild(li);
+        });
+    } else {
+        successList.style.display = 'none';
+    }
+    
+    // Show unavailable items with links
+    if (unavailableItems.length > 0) {
+        errorList.style.display = 'block';
+        currentUnavailableItems = unavailableItems;
+        
+        unavailableItems.forEach(pid => {
+            const li = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = `https://playmodb.org/cgi-bin/showpart.pl?partnum=${pid}`;
+            link.target = '_blank';
+            link.textContent = pid;
+            link.title = 'In playmodb.org öffnen';
+            li.appendChild(link);
+            li.appendChild(document.createTextNode(' – nicht verfügbar'));
+            errorItemsUl.appendChild(li);
+        });
+    } else {
+        errorList.style.display = 'none';
+        currentUnavailableItems = [];
+    }
+    
+    // Show results container if there's anything to show
+    resultsDiv.style.display = (successItems.length > 0 || unavailableItems.length > 0) ? 'block' : 'none';
+}
+
+// Open all unavailable items in playmodb.org
+document.getElementById('btnOpenAllUnavailable').addEventListener('click', () => {
+    currentUnavailableItems.forEach(pid => {
+        chrome.tabs.create({ 
+            url: `https://playmodb.org/cgi-bin/showpart.pl?partnum=${pid}`,
+            active: false 
+        });
+    });
+});
+
+// Download unavailable items as text file
+document.getElementById('btnDownloadUnavailable').addEventListener('click', () => {
+    const content = currentUnavailableItems.join('\n');
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'nicht-verfuegbare-artikel.txt';
+    a.click();
+    
+    URL.revokeObjectURL(url);
 });
 
 // Import function that runs in the page context
@@ -132,7 +211,14 @@ async function importArticles(articles, delay) {
     
     if (availableArticles.length === 0) {
         console.log('%c\n⚠️ Keine verfügbaren Artikel!', 'color: #fbbf24;');
-        return { success: 0, errors: 0, available: 0, unavailable: unavailableArticles.length };
+        return { 
+            success: 0, 
+            errors: 0, 
+            available: 0, 
+            unavailable: unavailableArticles.length,
+            successItems: [],
+            unavailableItems: unavailableArticles
+        };
     }
     
     // Phase 2: Add to cart
@@ -140,6 +226,7 @@ async function importArticles(articles, delay) {
     
     let success = 0;
     let errors = 0;
+    const successfulArticles = [];
     
     for (let i = 0; i < availableArticles.length; i++) {
         const article = availableArticles[i];
@@ -165,6 +252,7 @@ async function importArticles(articles, delay) {
             } else {
                 console.log('%c  ✓ Hinzugefügt', 'color: #22c55e;');
                 success++;
+                successfulArticles.push({ pid: article.pid, name: article.name, qty: article.qty });
             }
         } catch (err) {
             console.log('%c  ✗ ' + err.message, 'color: #ef4444;');
@@ -184,7 +272,14 @@ async function importArticles(articles, delay) {
         console.log('%c\n💡 Seite aktualisieren um Warenkorb zu sehen!', 'color: #fbbf24;');
     }
     
-    return { success, errors, available: availableArticles.length, unavailable: unavailableArticles.length };
+    return { 
+        success, 
+        errors, 
+        available: availableArticles.length, 
+        unavailable: unavailableArticles.length,
+        successItems: successfulArticles,
+        unavailableItems: unavailableArticles
+    };
 }
 
 // Export button click

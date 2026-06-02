@@ -37,14 +37,19 @@ So ist das Icon immer sichtbar und schnell erreichbar.
 ### 📥 Import
 
 - Artikelliste eingeben (Format: `Artikelnummer;Menge`)
-- Automatische Verfügbarkeitsprüfung
+- Automatische Verfügbarkeitsprüfung vor dem Import
 - Ein-Klick-Import in den Warenkorb
 - Kein manuelles Kopieren in die Konsole nötig!
+- **Detaillierte Ergebnisanzeige** nach dem Import:
+  - Liste der erfolgreich importierten Artikel
+  - Liste der nicht verfügbaren Artikel mit Links zu [playmodb.org](https://playmodb.org) für Alternativsuche
+  - Button zum Öffnen aller nicht verfügbaren Artikel in playmodb.org
+  - Button zum Speichern der nicht verfügbaren Artikel als Textdatei
 
 ### 📤 Export
 
 - Warenkorb mit einem Klick exportieren
-- Artikelliste wird automatisch kopiert
+- Artikelliste wird automatisch in die Zwischenablage kopiert
 - Listen können lokal gespeichert werden
 
 ## Hinweis
@@ -54,3 +59,21 @@ Diese Extension ist ein unabhängiges Open-Source-Projekt und steht in keiner Ve
 ## Verwandtes Projekt
 
 Siehe auch das [Web-Tool](https://arcadetv.github.io/playmobil-cart-helper/) für eine browserbasierte Alternative ohne Extension-Installation.
+
+## Changelog
+
+### v1.1.0
+
+- **Neu:** Detaillierte Ergebnisanzeige nach dem Import
+- **Neu:** Nicht verfügbare Artikel werden mit Links zu playmodb.org angezeigt
+- **Neu:** Button zum Öffnen aller nicht verfügbaren Artikel in playmodb.org (neue Tabs)
+- **Neu:** Button zum Speichern der nicht verfügbaren Artikel als Textdatei
+- Verbesserte Fehlerbehandlung
+
+### v1.0.0
+
+- Initiale Version
+- Import: Artikelliste in Warenkorb importieren
+- Export: Warenkorb als Artikelliste exportieren
+- Automatische Verfügbarkeitsprüfung
+- Warnung wenn nicht auf playmobil.com

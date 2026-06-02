@@ -234,6 +234,67 @@
             display: none;
         }
 
+        .import-results {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .import-results h4 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .import-results .success-list h4 {
+            color: #22c55e;
+        }
+
+        .import-results .error-list h4 {
+            color: #ef4444;
+        }
+
+        .import-results ul {
+            list-style: none;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .import-results li {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .import-results li:last-child {
+            border-bottom: none;
+        }
+
+        .import-results a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+
+        .import-results a:hover {
+            text-decoration: underline;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .result-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 11px;
+        }
+
         .saved-lists {
             margin-top: 15px;
             padding-top: 15px;
@@ -305,6 +366,21 @@ Format: Artikelnummer;Menge"></textarea>
         <button class="btn btn-primary" id="btnImport">🚀 In Warenkorb importieren</button>
         
         <div id="importStatus" class="status"></div>
+
+        <div id="importResults" class="import-results" style="display: none;">
+            <div class="success-list" id="successList" style="display: none;">
+                <h4>✅ Erfolgreich importiert</h4>
+                <ul id="successItems"></ul>
+            </div>
+            <div class="error-list" id="errorList" style="display: none;">
+                <h4>❌ Nicht verfügbar</h4>
+                <ul id="errorItems"></ul>
+                <div class="result-actions">
+                    <button class="btn btn-secondary" id="btnOpenAllUnavailable">🔗 Alle in playmodb öffnen</button>
+                    <button class="btn btn-secondary" id="btnDownloadUnavailable">💾 Liste speichern</button>
+                </div>
+            </div>
+        </div>
 
     </div>
 
