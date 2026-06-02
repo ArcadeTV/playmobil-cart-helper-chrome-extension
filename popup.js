@@ -1,11 +1,25 @@
 // Tab switching
+function switchToTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.tab[data-tab="${tabName}"]`)?.classList.add('active');
+    document.getElementById('tab-' + tabName)?.classList.add('active');
+}
+
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        const tabName = tab.dataset.tab;
+        switchToTab(tabName);
+        // Save active tab to storage
+        chrome.storage.local.set({ activeTab: tabName });
     });
+});
+
+// Restore last active tab on popup open
+chrome.storage.local.get('activeTab', ({ activeTab }) => {
+    if (activeTab) {
+        switchToTab(activeTab);
+    }
 });
 
 // Check if we're on playmobil.com
@@ -176,6 +190,12 @@ document.getElementById('btnImport').addEventListener('click', async () => {
     statusEl.innerHTML = `<span style="color: ${errorCount > 0 ? '#fbbf24' : '#22c55e'};">${message}</span>`;
     
     showImportResults(successItems, unavailableItems);
+    
+    // Show "Go to cart" button if items were added
+    if (addedCount > 0) {
+        document.getElementById('goToCartContainer').style.display = 'block';
+    }
+    
     document.getElementById('btnImport').disabled = false;
 });
 
