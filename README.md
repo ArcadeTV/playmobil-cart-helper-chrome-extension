@@ -20,33 +20,17 @@ Eine Chrome-Extension zum automatischen Befüllen und Exportieren des Playmobil-
 ## Features
 
 ### 📥 Import
+
 - Artikelliste eingeben (Format: `Artikelnummer;Menge`)
 - Automatische Verfügbarkeitsprüfung
 - Ein-Klick-Import in den Warenkorb
 - Kein manuelles Kopieren in die Konsole nötig!
 
 ### 📤 Export
+
 - Warenkorb mit einem Klick exportieren
 - Artikelliste wird automatisch kopiert
 - Listen können lokal gespeichert werden
-
-## Icons erstellen
-
-Die Extension benötigt PNG-Icons. Erstelle folgende Dateien im `icons/` Ordner:
-- `icon16.png` (16x16 Pixel)
-- `icon48.png` (48x48 Pixel)
-- `icon128.png` (128x128 Pixel)
-
-**Tipp:** Du kannst ein einfaches Warenkorb-Emoji (🛒) als Icon verwenden oder ein eigenes Design erstellen.
-
-### Schnelle Icon-Erstellung
-
-1. Öffne einen Bildeditor (z.B. Paint, GIMP, Photoshop)
-2. Erstelle ein quadratisches Bild mit lila Hintergrund (#667eea)
-3. Füge ein Warenkorb-Symbol hinzu
-4. Speichere in den drei Größen
-
-Oder nutze einen Online-Icon-Generator wie [favicon.io](https://favicon.io/emoji-favicons/shopping-cart/).
 
 ## Hinweis
 
