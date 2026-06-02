@@ -39,18 +39,27 @@ So ist das Icon immer sichtbar und schnell erreichbar.
 - Artikelliste eingeben (Format: `Artikelnummer;Menge`)
 - Automatische Verfügbarkeitsprüfung vor dem Import
 - Ein-Klick-Import in den Warenkorb
+- **Live-Fortschrittsanzeige** während des Imports
 - Kein manuelles Kopieren in die Konsole nötig!
 - **Detaillierte Ergebnisanzeige** nach dem Import:
   - Liste der erfolgreich importierten Artikel
-  - Liste der nicht verfügbaren Artikel mit Links zu [playmodb.org](https://playmodb.org) für Alternativsuche
-  - Button zum Öffnen aller nicht verfügbaren Artikel in playmodb.org
+  - Liste der nicht verfügbaren Artikel mit Links zu [playmodb.org](https://playmodb.org) und [playmobil.com](https://www.playmobil.com)
+  - Buttons zum Öffnen aller nicht verfügbaren Artikel in playmodb.org oder playmobil.com
   - Button zum Speichern der nicht verfügbaren Artikel als Textdatei
+  - **"Zum Warenkorb"**-Button nach erfolgreichem Import
 
 ### 📤 Export
 
 - Warenkorb mit einem Klick exportieren
 - Artikelliste wird automatisch in die Zwischenablage kopiert
 - Listen können lokal gespeichert werden
+
+### 🗑️ Warenkorb leeren
+
+- Entfernt alle Artikel aus dem Warenkorb
+- **Live-Fortschrittsanzeige** während des Löschens
+- Automatische Wiederholung bei Rate-Limit
+- Funktioniert auch bei eingeloggten Accounts
 
 ## Hinweis
 
@@ -61,6 +70,16 @@ Diese Extension ist ein unabhängiges Open-Source-Projekt und steht in keiner Ve
 Siehe auch das [Web-Tool](https://arcadetv.github.io/playmobil-cart-helper/) für eine browserbasierte Alternative ohne Extension-Installation.
 
 ## Changelog
+
+### v1.2.0
+
+- **Neu:** 🗑️ Warenkorb leeren - Entfernt alle Artikel mit einem Klick
+- **Neu:** Live-Fortschrittsanzeige beim Import und Leeren
+- **Neu:** "Zum Warenkorb"-Button nach erfolgreichem Import
+- **Neu:** Links zu playmobil.com für nicht verfügbare Artikel
+- **Neu:** Tab-Zustand wird beim Schließen gespeichert
+- **Neu:** Automatische Wiederholung bei Rate-Limit
+- Verbesserte UI mit besserer Übersichtlichkeit
 
 ### v1.1.0
 
