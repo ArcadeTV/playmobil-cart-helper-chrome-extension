@@ -4,14 +4,19 @@ Eine Chrome-Extension zum automatischen Befüllen und Exportieren des Playmobil-
 
 ## Installation
 
-### Schritt 1: Extension laden
+### Schritt 1: Extension herunterladen
+
+1. Lade die neueste Version herunter: **[Download ZIP](https://github.com/ArcadeTV/playmobil-cart-helper-chrome-extension/archive/refs/heads/main.zip)**
+2. Entpacke die ZIP-Datei in einen Ordner deiner Wahl
+
+### Schritt 2: Extension in Chrome laden
 
 1. Öffne Chrome und gehe zu `chrome://extensions/`
 2. Aktiviere oben rechts den **Entwicklermodus**
 3. Klicke auf **"Entpackte Erweiterung laden"**
-4. Wähle diesen Ordner (`playmobil-cart-extension`)
+4. Wähle den entpackten Ordner
 
-### Schritt 2: Extension anpinnen (empfohlen)
+### Schritt 3: Extension anpinnen (empfohlen)
 
 1. Klicke auf das Puzzle-Symbol (🧩) rechts neben der Adressleiste
 2. Finde "Playmobil Warenkorb-Helfer" in der Liste
@@ -19,7 +24,7 @@ Eine Chrome-Extension zum automatischen Befüllen und Exportieren des Playmobil-
 
 So ist das Icon immer sichtbar und schnell erreichbar.
 
-### Schritt 3: Extension nutzen
+### Schritt 4: Extension nutzen
 
 1. Öffne [playmobil.com](https://www.playmobil.com)
 2. Klicke auf das Extension-Icon in der Browser-Leiste
