@@ -8,7 +8,13 @@ Eine Chrome-Extension zum automatisierten Befüllen, Exportieren und Leeren des 
 
 Diese Extension steht unter der MIT-Lizenz. Siehe die [LICENSE](LICENSE)-Datei für weitere Informationen.
 
-## Installation
+## Installation über Chrome Web Store
+
+Die Erweiterung ist im Chrome Web Store verfügbar:
+
+[Chrome Web Store besuchen](https://chromewebstore.google.com/detail/warenkorb-helfer-f%C3%BCr-play/fdebbbcehbnfkajhclmgpdfaildobcbf)
+
+## Manuelle Installation
 
 ### Schritt 1: Extension herunterladen
 
