@@ -9,4 +9,4 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 });
 
-console.log('%c🛒 Playmobil Warenkorb-Helfer Extension aktiv', 'color: #667eea; font-weight: bold;');
+console.log('%c🛒 Warenkorb-Helfer für playmobil.com Extension aktiv', 'color: #667eea; font-weight: bold;');
